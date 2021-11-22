@@ -2,11 +2,14 @@ module github.com/zvfvrv/goBGPSRv6PolicyClient
 
 go 1.17
 
-require github.com/spf13/cobra v1.2.1
+require (
+	github.com/golang/protobuf v1.5.2
+	github.com/spf13/cobra v1.2.1
+	google.golang.org/grpc v1.40.0
+)
 
 require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
@@ -19,7 +22,6 @@ require (
 	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71 // indirect
-	google.golang.org/grpc v1.40.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -27,7 +29,7 @@ require (
 
 require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/osrg/gobgp v2.0.0+incompatible
+	github.com/osrg/gobgp v0.0.0-20210801043420-9e48a36ed97c
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.9.0
 )

@@ -31,6 +31,8 @@ var globalOpts struct {
 	Port int
 }
 
+var BgpFamilySRv6IPv6 = api.Family{Afi: api.Family_AFI_IP6, Safi: api.Family_SAFI_SR_POLICY}
+
 var client api.GobgpApiClient
 var ctx context.Context
 var cancel context.CancelFunc
