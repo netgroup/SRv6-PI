@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
+Copyright © 2021 Francesco Lombardo <franclombardo@gmail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+
 	api "github.com/osrg/gobgp/api"
 	"github.com/spf13/cobra"
 )
@@ -24,15 +25,10 @@ import (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "List all SRv6 Policy Path",
+	Long:  `List all SRv6 Policy Path`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		fmt.Println("SRv6 Policy List")
 		paths, err := client.ListPath(ctx, &api.ListPathRequest{
 			TableType: api.TableType_GLOBAL,
 			Family:    &BgpFamilySRv6IPv6,
@@ -44,10 +40,16 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			fmt.Println(err)
 		}
-		if len(listPaths.Destination.Paths) == 0 {
+		if listPaths == nil || (len(listPaths.Destination.Paths) == 0) {
 			fmt.Println("No path found")
+		} else {
+			fmt.Printf("Paths: (%d available)\n", len(listPaths.Destination.Paths))
+			for i, path := range listPaths.Destination.Paths {
+				policyPath := SRv6PolicyPath{}
+				policyPath.fromPath(path)
+				fmt.Printf("Path #%d:\n%s\n", i, policyPath.String())
+			}
 		}
-		fmt.Println(listPaths.Destination.Paths)
 	},
 }
 
