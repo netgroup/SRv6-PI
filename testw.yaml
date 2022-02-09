@@ -1,0 +1,23 @@
+nlri:
+  distinguisher: 4
+  color: 94
+  endpoint: fd00::1000
+iswithdraw: false
+age:
+  seconds: 1638267871
+  nanos: 992981348
+sourceasn: 5600
+family:
+  afi: 2
+  safi: 73
+neighborip: fd00::1011
+segmentlist:
+  weight: 0
+  segments:
+  - sid: fcff:0:0:20af::f
+    behavior: 19
+  - sid: fcff:0:0:30af::f
+    behavior: 19
+bsid: cafe::1
+priority: 0
+nexthop: fd00::1000

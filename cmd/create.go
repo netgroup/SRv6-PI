@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
 
 	"github.com/golang/protobuf/ptypes"
@@ -24,6 +25,8 @@ import (
 	api "github.com/osrg/gobgp/api"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"gopkg.in/yaml.v2"
 )
 
 var policiesFile string
@@ -31,30 +34,28 @@ var policiesFile string
 // createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Create SRv6 Policy Path",
+	Long: `Create SRv6 Policy Path defined in a YAML file. For example:
 
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("create called")
-		isWithdrawal := false
+	//	isWithdrawal := false
 		attrs := []*any.Any{}
+/* 
 		nlrisr, _ := ptypes.MarshalAny(&api.SRPolicyNLRI{
-			Length:        192,
-			Distinguisher: 2,
-			Color:         99,
-			Endpoint:      net.ParseIP("10.0.0.15").To4(),
-		})
+			Length:   192,
+			Endpoint: net.ParseIP("fd11::1000"),
+		}) */
 		originAttr, err := ptypes.MarshalAny(&api.OriginAttribute{Origin: 0})
 		if err != nil {
 			fmt.Println(err)
 		}
 		attrs = append(attrs, originAttr)
 		nhAttr, err := ptypes.MarshalAny(&api.NextHopAttribute{
-			NextHop: "10.0.0.15",
+			NextHop: "fd11::1000",
 		})
 		if err != nil {
 			fmt.Println(err)
@@ -106,23 +107,74 @@ to quickly create a Cobra application.`,
 			},
 		})
 
-		attrs = append(attrs, tun)
+ 		attrs = append(attrs, tun)
+/*
+		spp_nlri := &SRPolicyNLRI{
+			Distinguisher: 2,
+			Color:         99,
+			Endpoint:      net.ParseIP("fd11::1000"),
+		}
+		spp_age := ptypes.TimestampNow()
+		spp_asn := uint32(5600)
+		spp_famiy := &BgpFamilySRv6IPv6
+		spp_seglist := &SRv6SegmentList{
+			Weight: 0,
+			Segments: []*SegmentTypeB{
+				{
+					Sid:      net.ParseIP("fcff:0:0:20AF::F"),
+					Behavior: 19,
+				},
+				{
+					Sid:      net.ParseIP("fcff:0:0:30AF::F"),
+					Behavior: 19,
+				},
+			},
+		}
+		spp_bsid := net.ParseIP("cafe::01")
+		spp_priority := uint32(0)
+		srv6policypath := SRv6PolicyPath{
+			Nlri:        spp_nlri,
+			IsWithdraw:  isWithdrawal,
+			Age:         spp_age,
+			SourceAsn:   spp_asn,
+			Family:      spp_famiy,
+			NeighborIp:  "10.0.0.18",
+			SegmentList: spp_seglist,
+			Bsid:        spp_bsid,
+			Priority:    spp_priority,
+		}
 
+		file, _ := yaml.Marshal(srv6policypath)
+		_ = ioutil.WriteFile("testw.yaml", file, 0644) */
+
+		srv6policypathFromFile := SRv6PolicyPath{}
+		srv6policypathFromFile.fromFile("test.yaml")
+		file, _ := yaml.Marshal(srv6policypathFromFile)
+		_ = ioutil.WriteFile("testw.yaml", file, 0644)
+		spp_path, err := srv6policypathFromFile.toPath()
 		client.AddPath(ctx, &api.AddPathRequest{
 			TableType: api.TableType_GLOBAL,
-			Path: &api.Path{
-				Nlri:       nlrisr,
-				IsWithdraw: isWithdrawal,
-				Pattrs:     attrs,
-				Age:        ptypes.TimestampNow(),
-				SourceAsn:  64512,
-				Family:     &BgpFamilySRv6IPv6,
-			},
+			Path:      spp_path,
 		})
+
+		// newPAth := &api.Path{
+		// 	Nlri:       nlrisr,
+		// 	IsWithdraw: isWithdrawal,
+		// 	Pattrs:     attrs,
+		// 	Age:        ptypes.TimestampNow(),
+		// 	SourceAsn:  65000,
+		// 	Family:     &BgpFamilySRv6IPv6,
+		// }
+		
+		// client.AddPath(ctx, &api.AddPathRequest{
+		// 	TableType: api.TableType_GLOBAL,
+		// 	Path:      newPAth,
+		// })
 
 		if err != nil {
 			fmt.Println(err)
 		}
+		fmt.Println("path created")
 	},
 }
 

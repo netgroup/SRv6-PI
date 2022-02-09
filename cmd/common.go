@@ -17,12 +17,15 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	api "github.com/osrg/gobgp/api"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"gopkg.in/yaml.v2"
 )
 
 type SRPolicyNLRI struct {
@@ -35,6 +38,15 @@ func (nlri *SRPolicyNLRI) toString() string {
 	return fmt.Sprintf("Distinguisher: %d, Color: %d, Endpoint: %s", nlri.Distinguisher, nlri.Color, nlri.Endpoint)
 }
 
+func (nlri *SRPolicyNLRI) toNLRI() (srnlri *api.SRPolicyNLRI, err error) {
+	return &api.SRPolicyNLRI{
+		Length:        192,
+		Distinguisher: nlri.Distinguisher,
+		Color:         nlri.Color,
+		Endpoint:      nlri.Endpoint,
+	}, nil
+}
+
 type SegmentTypeB struct {
 	Sid      net.IP
 	Behavior uint8
@@ -42,6 +54,18 @@ type SegmentTypeB struct {
 
 func (seg *SegmentTypeB) toString() string {
 	return fmt.Sprintf("Sid: %s, Behavior: %d", seg.Sid, seg.Behavior)
+}
+
+func (seg *SegmentTypeB) toBGPSegmentTypeB() (srnlri *api.SegmentTypeB, err error) {
+	var epbs = &api.SRv6EndPointBehavior{
+		Behavior: api.SRv6Behavior_END_DT4,
+	}
+
+	return &api.SegmentTypeB{
+		Flags:                     &api.SegmentFlags{SFlag: true},
+		Sid:                       seg.Sid,
+		EndpointBehaviorStructure: epbs,
+	}, nil
 }
 
 type SRv6SegmentList struct {
@@ -68,6 +92,16 @@ type SRv6PolicyPath struct {
 	SegmentList *SRv6SegmentList
 	Bsid        net.IP
 	Priority    uint32
+	NextHop     net.IP
+}
+
+func (p *SRv6PolicyPath) fromFile(filePath string) error {
+	yamlFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("Error reading YAML file: %s\n", err)
+		return err
+	}
+	return yaml.Unmarshal(yamlFile, p)
 }
 
 func (p *SRv6PolicyPath) fromPath(path *api.Path) (err error) {
@@ -135,15 +169,83 @@ func (p *SRv6PolicyPath) toPath() (path *api.Path, err error) {
 		SourceAsn:  p.SourceAsn,
 		Family:     p.Family,
 		NeighborIp: p.NeighborIp,
+		Pattrs:     []*anypb.Any{},
 	}
-	srnlri := &api.SRPolicyNLRI{
-		Distinguisher: p.Nlri.Distinguisher,
-		Color:         p.Nlri.Color,
-		Endpoint:      p.Nlri.Endpoint,
+
+	//
+	originAttr, err := ptypes.MarshalAny(&api.OriginAttribute{Origin: 0})
+	if err != nil {
+		fmt.Println(err)
 	}
-	path.Nlri, err = ptypes.MarshalAny(srnlri)
+	path.Pattrs = append(path.Pattrs, originAttr)
+
+	// NextHopAttribute
+	nhAttr, err := ptypes.MarshalAny(&api.NextHopAttribute{
+		NextHop: p.NextHop.String(),
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+	path.Pattrs = append(path.Pattrs, nhAttr)
+
+	bsid, err := ptypes.MarshalAny(&api.SRBindingSID{
+		SFlag: true,
+		IFlag: false,
+		Sid:   p.Bsid,
+	})
+
 	if err != nil {
 		return nil, err
+	}
+
+	tlvbsid, err := ptypes.MarshalAny(&api.TunnelEncapSubTLVSRBindingSID{
+		Bsid: bsid,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	seglist := &api.TunnelEncapSubTLVSRSegmentList{
+		Weight: &api.SRWeight{
+			Flags:  0,
+			Weight: 12,
+		},
+		Segments: []*any.Any{},
+	}
+	for _, seg := range p.SegmentList.Segments {
+
+		var epbs = &api.SRv6EndPointBehavior{
+			Behavior: api.SRv6Behavior(seg.Behavior),
+		}
+		segment, err := ptypes.MarshalAny(&api.SegmentTypeB{
+			Flags:                     &api.SegmentFlags{SFlag: true},
+			Sid:                       net.ParseIP(seg.Sid.String()),
+			EndpointBehaviorStructure: epbs,
+		})
+		if err != nil {
+			return nil, err
+		}
+		seglist.Segments = append(seglist.Segments, segment)
+
+	}
+
+	seglistMarshal, err := ptypes.MarshalAny(seglist)
+
+	// TunnelEncapAttribute
+	tunnelEncapAttr, err := ptypes.MarshalAny(&api.TunnelEncapAttribute{
+		Tlvs: []*api.TunnelEncapTLV{
+			{
+				Type: 15,
+				Tlvs: []*anypb.Any{tlvbsid, seglistMarshal /*, pref, pri */},
+			},
+		},
+	})
+	path.Pattrs = append(path.Pattrs, tunnelEncapAttr)
+
+	srnlri, _ := p.Nlri.toNLRI()
+	path.Nlri, err = ptypes.MarshalAny(srnlri)
+	if err != nil {
+		return path, err
 	}
 	return path, err
 }
@@ -151,4 +253,8 @@ func (p *SRv6PolicyPath) toPath() (path *api.Path, err error) {
 func (p *SRv6PolicyPath) String() string {
 	return fmt.Sprintf("NLRI: %s \nIsWithdraw: %t \nAge: %s \nSourceAsn: %d \nFamily: %s \nNeighborIp: %s \nSegmentList:\n %s \nBsid: %s \nPriority: %d",
 		p.Nlri.toString(), p.IsWithdraw, p.Age, p.SourceAsn, p.Family.String(), p.NeighborIp, p.SegmentList.toString(), p.Bsid, p.Priority)
+}
+
+func PrintSRv6PolicyPath(path *SRv6PolicyPath) {
+	fmt.Println(path.String())
 }
