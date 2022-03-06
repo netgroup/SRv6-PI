@@ -15,3 +15,5 @@
 # vendor/
 
 goBGPSRv6PolicyClient
+
+*.swp
