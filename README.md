@@ -13,5 +13,13 @@ Inject SRv6 Policy with goBGP
 
 ## Usage
 
+### Inject a SRv6 policy
+
+    $ ./SRv6-PI create -u <goBGP_IP> -p <goBGP_port> --policyFile ~/policyFile.yaml
+
+### List SRv6 policies
+
+    $ ./SRv6-PI list -u <goBGP_IP> -p <goBGP_port>
+
 
 
