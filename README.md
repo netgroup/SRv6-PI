@@ -1,4 +1,4 @@
-# goBGPSRv6PolicyClient
+# SRv6-PI (Policy Injector)
 
 Inject SRv6 Policy with goBGP
 
