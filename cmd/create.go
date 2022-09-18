@@ -28,11 +28,7 @@ var policyFile string
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create SRv6 Policy Path",
-	Long: `Create SRv6 Policy Path defined in a YAML file. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long: `Create SRv6 Policy Path defined in a YAML file. For example:`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("create called")
 

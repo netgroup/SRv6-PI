@@ -1,7 +1,7 @@
 nlri:
   distinguisher: 4
   color: 94
-  endpoint: fd12::1000
+  endpoint: fd11::1000
 iswithdraw: false
 age:
   seconds: 1638267871
@@ -10,16 +10,14 @@ sourceasn: 5600
 family:
   afi: 2
   safi: 73
-neighborip: fd12::1000
+neighborip: fd11::1000
 segmentlist:
   weight: 0
   segments:
-  - sid: fcff:6::1
-    behavior: 18
-  - sid: fcff:8::1
-    behavior: 18
-  - sid: fcdd::12aa:d460:b250:45:b05
-    behavior: 18
-bsid: cafe::25
+  - sid: fcff:3::1
+    behavior: 19
+  - sid: fcdd::11aa:c11:b42f:f17e:a682
+    behavior: 19
+bsid: cafe::1c2
 priority: 0
-nexthop: fd12::1000
+nexthop: fd11::1000
