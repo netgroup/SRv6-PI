@@ -41,10 +41,10 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "goBGPSRv6PolicyClient",
+	Use:   "SRv6-PI",
 	Short: "Inject SRv6 Policy with goBGP",
 	Long: `Inject SRv6 Policy with goBGP. For example:
-goBGPSRv6PolicyClient is a CLI ...`,
+SRv6-PI is a CLI ...`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		var err error
 		ctx = context.Background()
@@ -93,7 +93,7 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVarP(&globalOpts.Host, "host", "u", "127.0.0.1", "host")
 	rootCmd.PersistentFlags().IntVarP(&globalOpts.Port, "port", "p", 50051, "port")
-	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goBGPSRv6PolicyClient.yaml)")
+	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.SRv6-PI.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -110,10 +110,10 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".goBGPSRv6PolicyClient" (without extension).
+		// Search config in home directory with name ".SRv6-PI" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".goBGPSRv6PolicyClient")
+		viper.SetConfigName(".SRv6-PI")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

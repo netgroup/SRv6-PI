@@ -1,4 +1,4 @@
-module github.com/zvfvrv/goBGPSRv6PolicyClient
+module github.com/zvfvrv/SRv6-PI
 
 go 1.17
 

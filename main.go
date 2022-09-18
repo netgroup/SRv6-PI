@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/zvfvrv/goBGPSRv6PolicyClient/cmd"
+import "github.com/zvfvrv/SRv6-PI/cmd"
 
 func main() {
 	cmd.Execute()
